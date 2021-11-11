@@ -1,7 +1,9 @@
 import { DataType } from './data-types';
-import { Model, WhereOptions } from './model';
+import { Model, ModelCtor, ModelType, WhereOptions } from './model';
 
 export type Primitive = 'string' | 'number' | 'boolean';
+
+export type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> };
 
 export interface Inflector {
   singularize(str: string): string;
@@ -24,20 +26,25 @@ export function formatNamedParameters(sql: string, parameters: {
 }, dialect: string): string;
 export function cloneDeep<T>(obj: T, fn?: (el: unknown) => unknown): T;
 
-export interface OptionsForMapping {
+export interface OptionsForMapping<TAttributes> {
   attributes?: string[];
-  where?: WhereOptions;
+  where?: WhereOptions<TAttributes>;
 }
 
 /** Expand and normalize finder options */
-export function mapFinderOptions<T extends OptionsForMapping>(options: T, model: typeof Model): T;
+export function mapFinderOptions<M extends Model, T extends OptionsForMapping<M['_attributes']>>(
+  options: T,
+  model: ModelCtor<M>
+): T;
 
 /* Used to map field names in attributes and where conditions */
-export function mapOptionFieldNames<T extends OptionsForMapping>(options: T, model: typeof Model): T;
+export function mapOptionFieldNames<M extends Model, T extends OptionsForMapping<M['_attributes']>>(
+  options: T, model: ModelCtor<M>
+): T;
 
-export function mapWhereFieldNames(attributes: object, model: typeof Model): object;
+export function mapWhereFieldNames(attributes: object, model: ModelType): object;
 /** Used to map field names in values */
-export function mapValueFieldNames(dataValues: object, fields: string[], model: typeof Model): object;
+export function mapValueFieldNames(dataValues: object, fields: string[], model: ModelType): object;
 
 export function isColString(value: string): boolean;
 export function canTreatArrayAsAnd(arr: unknown[]): boolean;
@@ -115,5 +122,3 @@ export class Where extends SequelizeMethod {
   constructor(attr: object, comparator: string, logic: string | object);
   constructor(attr: object, logic: string | object);
 }
-
-export { Promise } from './promise';

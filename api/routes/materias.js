@@ -4,12 +4,31 @@ var models = require("../models");
 
 router.get("/", (req, res) => {
   console.log("Esto es un mensaje para ver en consola");
+  const pageAsNumber = Number.parseInt(req.query.page);
+  const sizeAsNumber = Number.parseInt(req.query.size);
+
+  let page = 0;
+  if(!Number.isNaN(pageAsNumber) && pageAsNumber > 0) {
+    page = pageAsNumber;
+  }
+
+  let size = 10;
+  if(!Number.isNaN(sizeAsNumber) && sizeAsNumber > 0 && sizeAsNumber < 10) {
+      size = sizeAsNumber;
+  }
+
   models.materia
-    .findAll({
+    .findAndCountAll({
+      limit: size,
+      offset: page * size,
       attributes: ["id", "nombre", "id_carrera"],
       include:[{as:'Carrera-Relacionada', model:models.carrera, attributes: ["id","nombre"]}]
     })
-    .then(materia => res.send(materia))
+    .then(materia => res.send({
+      //materia
+      content: materia.rows,
+      totalPages: Math.ceil(materia.count / size)
+    }))
     .catch(() => res.sendStatus(500));
 });
 

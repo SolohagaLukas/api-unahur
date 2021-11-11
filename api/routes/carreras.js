@@ -4,11 +4,30 @@ var models = require("../models");
 
 router.get("/", (req, res) => {
   console.log("Esto es un mensaje para ver en consola");
+  const pageAsNumber = Number.parseInt(req.query.page);
+  const sizeAsNumber = Number.parseInt(req.query.size);
+
+  let page = 0;
+  if(!Number.isNaN(pageAsNumber) && pageAsNumber > 0) {
+    page = pageAsNumber;
+  }
+
+  let size = 10;
+  if(!Number.isNaN(sizeAsNumber) && sizeAsNumber > 0 && sizeAsNumber < 10) {
+      size = sizeAsNumber;
+  }
+
   models.carrera
-    .findAll({
+    .findAndCountAll({
+      limit: size,
+      offset: page * size,
       attributes: ["id", "nombre"]
     })
-    .then(carreras => res.send(carreras))
+    .then(carreras => res.send({
+      //carreras
+      content: carreras.rows,
+      totalPages: Math.ceil(carreras.count / size)
+    }))
     .catch(() => res.sendStatus(500));
 });
 
