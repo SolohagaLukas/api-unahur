@@ -5,6 +5,10 @@
     "database": "api_v1",
     "host": "localhost",
     "dialect": "mariadb",
-    "operatorsAliases": false
+    "operatorsAliases": false,
+
+    "AUTH_SECRET": "trololo",
+    "AUTH_EXPIRES": "1d",
+    "AUTH_ROUNDS": 10 
   }
 }
