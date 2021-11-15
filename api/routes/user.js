@@ -2,24 +2,52 @@ var express = require("express");
 var router = express.Router();
 var models = require("../models");
 const user = require("../models/user");
+const post = require("../models/post");
+
+// Middlewares
+const auth = require('../middlewares/auth');
 
 // Controllers
-const AuthController = require('../controllers/AuthController')
+const AuthController = require('../controllers/AuthController');
+const PostController = require('../controllers/PostController');
 
-router.get("/", (req, res) => {
+//Para obtener(GET) todos los usuarios
+
+router.get("/users", (req, res) => {
     console.log("Esto es un mensaje para ver en consola");
+    const pageAsNumber = Number.parseInt(req.query.page);
+    const sizeAsNumber = Number.parseInt(req.query.size);
+
+    let page = 0;
+    if(!Number.isNaN(pageAsNumber) && pageAsNumber > 0) {
+      page = pageAsNumber;
+    }
+    
+    let size = 10;
+    if(!Number.isNaN(sizeAsNumber) && sizeAsNumber > 0 && sizeAsNumber < 10) {
+      size = sizeAsNumber;
+    }
+
     models.user
-      .findAll({
+      .findAndCountAll({
+        limit: size,
+        offset: page * size,
         attributes: ["name", "password", "email"],
       })
-      .then(user => res.send(user))
+      .then(user => res.send({
+        //user
+        content: user.rows,
+        totalPages: Math.ceil(user.count / size)
+      }))
       .catch(() => res.sendStatus(500));
   });
-  
+
 //Dos rutas: login y registro
 router.post("/signin", AuthController.signIn);
 router.post("/signup", AuthController.signUp);
 
+router.get('/posts', auth, PostController.index);
+/*
   const findUser = (id, { onSuccess, onNotFound, onError }) => {
     models.user
       .findOne({
@@ -29,7 +57,7 @@ router.post("/signup", AuthController.signUp);
       .then(user => (user ? onSuccess(user) : onNotFound()))
       .catch(() => onError());
   };
-  
+
   router.get("/:id", (req, res) => {
     findUser(req.params.id, {
       onSuccess: user => res.send(user),
@@ -60,7 +88,7 @@ router.post("/signup", AuthController.signUp);
       onError: () => res.sendStatus(500)
     });
   });
-  
+  */
   router.delete("/:id", (req, res) => {
     const onSuccess = user =>
       user
